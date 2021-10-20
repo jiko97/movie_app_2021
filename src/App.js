@@ -1,57 +1,58 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+import axios from 'axios';
+import Movie from './Movie';
+import "./App.css";
 
 // React 장점 : 재사용 가능한 컴포넌트를 만들 수 있음
 // 컴포넌트를 계속 반복해서 사용 가능 
-const foodMyFav = [
-  {
-    id: 1,
-    name: "kimchi",
-    image: "https://images.unsplash.com/photo-1583224944844-5b268c057b72?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8a2ltY2hpfGVufDB8fDB8fA%3D%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=60",
-    rating: 5.0
-  },
-  {
-    id: 2,
-    name: "bulgogi",
-    image: "https://images.unsplash.com/photo-1559863658-57587f49d0c4?ixid=MnwxMjA3fDB8MHxzZWFyY2h8NXx8YnVsZ29naXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=60",
-    rating: 4.5
-  },
-  {
-    id: 3,
-    name: "bibimbap",
-    image: "https://images.unsplash.com/photo-1584278858536-52532423b9ea?ixid=MnwxMjA3fDB8MHxzZWFyY2h8NHx8YnVsZ29naXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=60",
-    rating: 4.0
+
+// 2. class component 
+// App 클래스는 React 컴포넌트에서 확장됨 
+// 출력할 내용을 render 메소드안에 넣기 
+// 바꿀 데이터를 state안에 넣기
+// .setState를 호출하면 state를 refresh하고 render function을 호출한다
+// 가장 먼저 호출될 componentDidMount()에서 data를 fetch한다 
+// async(비동기; 함수가 호출될 때까지 대기) -> await 사용 가능 
+class App extends React.Component {
+  state = {
+    isLoading: true,
+    movies: []
+  };
+
+  getMovies = async () => {
+    const {data: {data: {movies}}} = await axios.get("https://yts-proxy.now.sh/list_movies.json?sort_by=rating");
+    this.setState({ movies, isLoading: false });
+  };  
+
+  componentDidMount() {
+    this.getMovies();
   }
-];
 
-function Food({name, picture, rating}) {
-  return (
-    <div>
-      <h2>I love {name}</h2>
-      <h4>{rating}/5.0</h4>
-      <img src={picture}></img>
-    </div>    
-  );
+  render(){
+    const { isLoading, movies } = this.state;
+    return (
+      <section className="container">
+        {isLoading ? (
+          <div className="loader">
+            <span className="loader__text">Loading...</span>
+          </div>
+        ) : ( 
+          <div className="movies">
+            {movies.map(movie => (
+                <Movie
+                  key={movie.id}
+                  id={movie.id}
+                  year={movie.year}
+                  title={movie.title}
+                  summary={movie.summary}
+                  poster={movie.medium_cover_image}
+                  genres={movie.genres}
+                />
+            ))}
+          </div>
+        )}
+      </section>
+    );
+  }
 }
-Food.propTypes = {
-  name: PropTypes.string.isRequired,
-  picture: PropTypes.string.isRequired,
-  rating: PropTypes.number.isRequired
-};
-
-function App() {
-  return (
-    <div>
-      {foodMyFav.map(dish => (
-        <Food 
-          key={dish.id} 
-          name={dish.name} 
-          picture={dish.image} 
-          rating={dish.rating}>
-        </Food>
-        ))}
-    </div>
-  );
-}
-
 export default App;
